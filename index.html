@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gastos Internos — MQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+
+    /* ── VARS ── */
+    :root {
+      --dark:      #0f0d0b;
+      --dark2:     #181410;
+      --dark3:     #221d17;
+      --dark4:     #2b2318;
+      --cream:     #F4F3F2;
+      --silver:    #98989a;
+      --text:      #F4F3F2;
+      --dim:       rgba(244,243,242,0.55);
+      --faint:     rgba(244,243,242,0.12);
+      --error:     #e05252;
+      --radius:    12px;
+      --radius-sm: 8px;
+    }
+
+    /* ── BASE ── */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding: max(env(safe-area-inset-top, 20px), 28px) 24px max(env(safe-area-inset-bottom, 20px), 32px);
+    }
+    .screen.active { display: flex; }
+
+    /* ── TYPOGRAPHY ── */
+    .bebas { font-family: 'Inter Tight', sans-serif; font-weight: 700; letter-spacing: 0.03em; }
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    /* ── LOGO BAR ── */
+    .logo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+    .logo-img {
+      height: 26px;
+      filter: brightness(0) invert(1);
+      opacity: 0.92;
+    }
+    .logo-sub {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    /* ── TOP BAR (form/menu screens) ── */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .back-btn {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--cream); }
+    .back-btn svg { width: 16px; height: 16px; }
+
+    .employee-pill {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--dark3);
+      border: 1px solid var(--faint);
+      border-radius: 20px;
+      padding: 5px 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .section-title span { color: var(--cream); opacity: 0.6; }
+    .section-sub {
+      font-size: 14px;
+      color: var(--dim);
+      font-weight: 300;
+      margin-bottom: 36px;
+    }
+
+    /* ── NAME INPUT (home) ── */
+    .name-field-wrap {
+      margin: 48px 0 40px;
+    }
+    .name-field-label {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--silver);
+      margin-bottom: 14px;
+      display: block;
+    }
+    .name-field-input {
+      width: 100%;
+      background: none;
+      border: none;
+      border-bottom: 1.5px solid rgba(244,243,242,0.18);
+      outline: none;
+      color: var(--cream);
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      padding: 0 0 14px;
+      caret-color: var(--cream);
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .name-field-input::placeholder {
+      color: rgba(244,243,242,0.2);
+      font-weight: 400;
+    }
+    .name-field-input:focus {
+      border-bottom-color: var(--cream);
+    }
+
+    /* ── PRIMARY BUTTON ── */
+    .btn-primary {
+      width: 100%;
+      padding: 18px;
+      background: var(--cream);
+      color: #0f0d0b;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: auto;
+    }
+    .btn-primary:hover { background: var(--silver); color: var(--cream); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled {
+      background: var(--dark4);
+      color: var(--dim);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 16px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--faint);
+      border-radius: var(--radius);
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--cream); color: var(--cream); }
+
+    /* ── CATEGORY CARDS ── */
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .category-card {
+      background: rgba(20, 18, 16, 0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(244, 243, 242, 0.10);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    }
+    .category-card:hover {
+      background: rgba(30, 27, 24, 0.70);
+      border-color: rgba(244, 243, 242, 0.28);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    }
+    .category-card:active { transform: translateY(0); }
+    .category-icon { font-size: 24px; }
+    .category-name {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .category-desc {
+      font-size: 11px;
+      color: var(--dim);
+      font-weight: 300;
+      line-height: 1.4;
+    }
+
+    /* ── FORM ── */
+    .form-title {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .form-title-accent {
+      display: inline-block;
+      width: 32px; height: 3px;
+      background: var(--silver);
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+
+    .form-body {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .field-input {
+      background: var(--dark3);
+      border: 1px solid var(--faint);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .field-input:focus { border-color: var(--cream); }
+    .field-input::placeholder { color: rgba(244,243,242,0.25); }
+    .field-input.error { border-color: var(--error); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-5px); }
+      40%,80% { transform: translateX(5px); }
+    }
+    .field-input.shake { animation: shake 0.35s ease; }
+
+    textarea.field-input {
+      resize: none;
+      min-height: 80px;
+      line-height: 1.5;
+    }
+
+    /* Date input color fix for webkit */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+
+    /* ── PILL TOGGLE ── */
+    .pill-group {
+      display: flex;
+      background: var(--dark3);
+      border: 1px solid var(--faint);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      gap: 4px;
+    }
+    .pill-group label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      gap: 2px;
+    }
+    .pill-group input[type="radio"] { display: none; }
+    .pill-group label .pill-name {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .pill-group label .pill-rate {
+      font-size: 11px;
+      color: rgba(244,243,242,0.3);
+    }
+    .pill-group input[type="radio"]:checked + label,
+    .pill-group label:has(input[type="radio"]:checked) {
+      background: var(--cream);
+    }
+    .pill-group input[type="radio"]:checked + label .pill-name,
+    .pill-group label:has(input[type="radio"]:checked) .pill-name {
+      color: #0f0d0b;
+    }
+    .pill-group input[type="radio"]:checked + label .pill-rate,
+    .pill-group label:has(input[type="radio"]:checked) .pill-rate {
+      color: rgba(15,13,11,0.65);
+    }
+
+    /* ── TOTAL DISPLAY ── */
+    .total-display {
+      background: var(--dark3);
+      border: 1px solid rgba(244,243,242,0.2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .total-display .total-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .total-display .total-value {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── PHOTO INPUT ── */
+    .photo-field {
+      background: var(--dark3);
+      border: 1px dashed var(--faint);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .photo-field:hover { border-color: var(--silver); }
+    .photo-field input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .photo-field svg { color: var(--dim); }
+    .photo-field .photo-label {
+      font-size: 13px;
+      color: var(--dim);
+      font-weight: 400;
+    }
+    .photo-field .photo-hint {
+      font-size: 11px;
+      color: rgba(244,243,242,0.3);
+    }
+    .photo-preview {
+      width: 100%;
+      max-height: 160px;
+      object-fit: cover;
+      border-radius: 6px;
+      display: none;
+    }
+
+    /* ── AMOUNT INPUT ── */
+    .amount-wrapper {
+      position: relative;
+    }
+    .amount-wrapper .currency {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--silver);
+      pointer-events: none;
+    }
+    .amount-wrapper .field-input {
+      padding-left: 32px;
+    }
+
+    /* ── TWO COLUMNS ── */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── SUBMIT AREA ── */
+    .submit-area {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--faint);
+    }
+
+    /* ── SUCCESS SCREEN ── */
+    .success-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(244,243,242,0.08);
+      border: 2px solid rgba(244,243,242,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+    }
+    .success-icon svg { width: 36px; height: 36px; color: var(--cream); }
+    .success-screen-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+      justify-content: center;
+      gap: 12px;
+    }
+    .success-title {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--text);
+      line-height: 1;
+    }
+    .success-summary {
+      font-size: 15px;
+      color: var(--cream);
+      font-weight: 500;
+    }
+    .success-note {
+      font-size: 12px;
+      color: rgba(244,243,242,0.3);
+    }
+    .success-actions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 40px;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: max(env(safe-area-inset-bottom, 16px), 24px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--dark3);
+      border: 1px solid var(--silver);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      font-size: 14px;
+      color: var(--text);
+      max-width: 400px;
+      width: calc(100% - 48px);
+      z-index: 10000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .toast.hidden { opacity: 0; transform: translateX(-50%) translateY(16px); pointer-events: none; }
+    .toast.error { border-color: var(--error); }
+    .toast-inner { display: flex; align-items: center; gap: 10px; }
+    .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--silver); flex-shrink: 0; }
+    .toast.error .toast-dot { background: var(--error); }
+
+    /* ── SPINNER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(15,13,11,0.3);
+      border-top-color: rgba(15,13,11,0.9);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--faint);
+      margin: 8px 0;
+    }
+
+    /* ── FIELD HINT ── */
+    .field-hint {
+      font-size: 11px;
+      color: rgba(244,243,242,0.3);
+      margin-top: 2px;
+    }
+
+    /* ── PHOTO BACKGROUNDS ── */
+    #screen-home {
+      background-image:
+        linear-gradient(to bottom, rgba(15,13,11,0.55) 0%, rgba(15,13,11,0.82) 60%, rgba(15,13,11,1) 100%),
+        url('bg1.jpeg');
+      background-size: cover;
+      background-position: center top;
+    }
+    #screen-menu {
+      background-image:
+        linear-gradient(to bottom, rgba(15,13,11,0.50) 0%, rgba(15,13,11,0.80) 60%, rgba(15,13,11,1) 100%),
+        url('bg2.jpeg');
+      background-size: cover;
+      background-position: center;
+    }
+    #screen-form {
+      background-image:
+        linear-gradient(to bottom, rgba(15,13,11,0.60) 0%, rgba(15,13,11,0.85) 55%, rgba(15,13,11,1) 100%),
+        url('bg3.jpeg');
+      background-size: cover;
+      background-position: center top;
+    }
+    #screen-success {
+      background-image:
+        linear-gradient(to bottom, rgba(15,13,11,0.45) 0%, rgba(15,13,11,0.78) 50%, rgba(15,13,11,1) 100%),
+        url('bg5.jpeg');
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* ── FADE IN ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .screen.active { animation: fadeInUp 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  SCREEN 1 — HOME (seleccionar empleado)                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="logo-bar">
+    <img src="https://www.morequalityevents.com/wp-content/uploads/2024/08/mq_transparent.png" alt="MQ" class="logo-img">
+    <span class="logo-sub">GASTOS INTERNOS</span>
+  </div>
+
+  <div class="section-title">GASTOS <span>INTERNOS</span></div>
+  <div class="section-sub">Escribe tu nombre para empezar</div>
+
+  <div class="name-field-wrap">
+    <label class="name-field-label" for="input-nombre">Nombre y primer apellido</label>
+    <input class="name-field-input" type="text" id="input-nombre" placeholder="Ana García" autocomplete="name" oninput="onNombreInput(this.value)">
+  </div>
+
+  <button class="btn-primary" id="btn-continue" disabled onclick="goToMenu()">CONTINUAR</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  SCREEN 2 — MENU (elegir tipo de gasto)                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="screen-menu" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      SALIR
+    </button>
+    <div class="employee-pill" id="menu-employee-pill"></div>
+  </div>
+
+  <div class="section-title">NUEVO <span>GASTO</span></div>
+  <div class="section-sub">Elige el tipo de gasto a registrar</div>
+
+  <div class="category-grid">
+    <div class="category-card" onclick="openForm('kilometraje')">
+      <div class="category-icon">🚗</div>
+      <div class="category-name">KILOMETRAJE</div>
+      <div class="category-desc">Viajes por trabajo</div>
+    </div>
+    <div class="category-card" onclick="openForm('comidas')">
+      <div class="category-icon">🍽️</div>
+      <div class="category-name">COMIDAS</div>
+      <div class="category-desc">Dietas y manutención</div>
+    </div>
+    <div class="category-card" onclick="openForm('alojamiento')">
+      <div class="category-icon">🏨</div>
+      <div class="category-name">ALOJAMIENTO</div>
+      <div class="category-desc">Hotel y estancias</div>
+    </div>
+    <div class="category-card" onclick="openForm('otros')">
+      <div class="category-icon">📋</div>
+      <div class="category-name">OTROS</div>
+      <div class="category-desc">Peajes, parking, etc.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  SCREEN 3 — FORMULARIO (dinámico)                         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="screen-form" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('menu')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      MENU
+    </button>
+    <div class="employee-pill" id="form-employee-pill"></div>
+  </div>
+
+  <div class="form-title" id="form-title">KILOMETRAJE</div>
+  <div class="form-title-accent"></div>
+
+  <div class="form-body" id="form-body">
+    <!-- Generado dinámicamente por JS -->
+  </div>
+
+  <div class="submit-area">
+    <button class="btn-primary" id="btn-submit" onclick="submitForm()">ENVIAR GASTO</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  SCREEN 4 — SUCCESS                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="screen-success" class="screen">
+  <div class="success-screen-inner">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <div class="success-title">GASTO<br>ENVIADO</div>
+    <div class="success-summary" id="success-summary"></div>
+    <div class="success-note">Guardado en la hoja de cálculo MQ</div>
+
+    <div class="success-actions">
+      <button class="btn-primary" onclick="showScreen('menu')">NUEVO GASTO</button>
+      <button class="btn-secondary" onclick="showScreen('home')">CAMBIAR EMPLEADO</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─────────────────────────────────────────────── -->
+<div id="toast" class="toast hidden">
+  <div class="toast-inner">
+    <div class="toast-dot"></div>
+    <span id="toast-msg"></span>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  CONFIGURACION — edita estas dos líneas
+// ════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwb_sNKrKMCvD5lt6ngC5cjzvymZSRt5XAiVBcMGL96m75seOQ4p3tuavCocmmicJQD/exec';
+
+const EMPLEADOS = [
+  'Empleado 1',
+  'Empleado 2',
+  'Empleado 3',
+];
+
+// ════════════════════════════════════════════════════════════
+//  ESTADO
+// ════════════════════════════════════════════════════════════
+const TARIFAS = { evento: 0.29, normal: 0.26 };
+
+let state = {
+  empleado: null,
+  tipoGasto: null,
+  fotoBase64: null,
+  fotoNombre: null,
+};
+
+// ════════════════════════════════════════════════════════════
+//  NAVEGACION
+// ════════════════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function onNombreInput(val) {
+  const trimmed = val.trim();
+  document.getElementById('btn-continue').disabled = trimmed.length < 2;
+}
+
+function goToMenu() {
+  const val = document.getElementById('input-nombre').value.trim();
+  if (!val) return;
+  state.empleado = val;
+  localStorage.setItem('gastosEmpleado', val);
+  document.getElementById('menu-employee-pill').textContent = val;
+  showScreen('menu');
+}
+
+function openForm(tipo) {
+  state.tipoGasto = tipo;
+  state.fotoBase64 = null;
+  state.fotoNombre = null;
+  document.getElementById('form-employee-pill').textContent = state.empleado;
+
+  const titles = {
+    kilometraje: 'KILOMETRAJE',
+    comidas: 'COMIDAS Y DIETAS',
+    alojamiento: 'ALOJAMIENTO',
+    otros: 'OTROS GASTOS',
+  };
+  document.getElementById('form-title').textContent = titles[tipo];
+
+  buildForm(tipo);
+  showScreen('form');
+}
+
+// ════════════════════════════════════════════════════════════
+//  BUILDER DE FORMULARIOS
+// ════════════════════════════════════════════════════════════
+function todayISO() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function buildForm(tipo) {
+  const body = document.getElementById('form-body');
+  body.innerHTML = '';
+
+  // Campo fecha (común a todos)
+  body.appendChild(makeField('Fecha', `
+    <input class="field-input" type="date" id="f_fecha" value="${todayISO()}" required>
+  `));
+
+  if (tipo === 'kilometraje') {
+    body.appendChild(makeField('Origen', `
+      <input class="field-input" type="text" id="f_origen" placeholder="Ciudad de origen" autocomplete="off" required>
+    `));
+    body.appendChild(makeField('Destino', `
+      <input class="field-input" type="text" id="f_destino" placeholder="Ciudad de destino" autocomplete="off" required>
+    `));
+    body.appendChild(makeField('Kilómetros', `
+      <input class="field-input" type="number" id="f_km" placeholder="0" min="0.1" step="0.1" required oninput="calcTotal()">
+    `));
+    body.appendChild(makeField('Tipo de viaje', `
+      <div class="pill-group" id="tipo-viaje-group">
+        <label>
+          <input type="radio" name="tipo_viaje" value="evento" onchange="calcTotal()">
+          <span class="pill-name">EVENTO</span>
+          <span class="pill-rate">0,29 €/km</span>
+        </label>
+        <label>
+          <input type="radio" name="tipo_viaje" value="normal" onchange="calcTotal()" checked>
+          <span class="pill-name">NORMAL</span>
+          <span class="pill-rate">0,26 €/km</span>
+        </label>
+      </div>
+    `));
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'total-display';
+    totalDiv.innerHTML = `
+      <span class="total-label">Total estimado</span>
+      <span class="total-value" id="total-display">0,00 €</span>
+    `;
+    body.appendChild(totalDiv);
+    body.appendChild(makeField('Notas', `
+      <textarea class="field-input" id="f_notas" placeholder="Motivo del viaje (opcional)"></textarea>
+    `));
+    body.appendChild(makeRCField());
+  }
+
+  if (tipo === 'comidas') {
+    body.appendChild(makeField('Tipo de comida', `
+      <div class="pill-group">
+        <label>
+          <input type="radio" name="tipo_comida" value="Desayuno" checked>
+          <span class="pill-name">DESAYUNO</span>
+        </label>
+        <label>
+          <input type="radio" name="tipo_comida" value="Comida">
+          <span class="pill-name">COMIDA</span>
+        </label>
+        <label>
+          <input type="radio" name="tipo_comida" value="Cena">
+          <span class="pill-name">CENA</span>
+        </label>
+      </div>
+    `));
+    body.appendChild(makeField('Importe', `
+      <div class="amount-wrapper">
+        <span class="currency">€</span>
+        <input class="field-input" type="number" id="f_importe" placeholder="0,00" min="0.01" step="0.01" required>
+      </div>
+    `));
+    body.appendChild(makeField('Descripción', `
+      <input class="field-input" type="text" id="f_descripcion" placeholder="Restaurante, concepto..." autocomplete="off" required>
+    `));
+    body.appendChild(makeRCField());
+    body.appendChild(makePhotoField());
+  }
+
+  if (tipo === 'alojamiento') {
+    body.appendChild(makeField('Hotel', `
+      <input class="field-input" type="text" id="f_hotel" placeholder="Nombre del hotel" autocomplete="off" required>
+    `));
+    body.appendChild(makeField('Importe', `
+      <div class="amount-wrapper">
+        <span class="currency">€</span>
+        <input class="field-input" type="number" id="f_importe" placeholder="0,00" min="0.01" step="0.01" required>
+      </div>
+    `));
+    body.appendChild(makeField('Descripción', `
+      <input class="field-input" type="text" id="f_descripcion" placeholder="Detalles adicionales (opcional)" autocomplete="off">
+    `));
+    body.appendChild(makeRCField());
+    body.appendChild(makePhotoField());
+  }
+
+  if (tipo === 'otros') {
+    body.appendChild(makeField('Concepto', `
+      <input class="field-input" type="text" id="f_concepto" placeholder="Peaje, parking, material..." autocomplete="off" required>
+    `));
+    body.appendChild(makeField('Importe', `
+      <div class="amount-wrapper">
+        <span class="currency">€</span>
+        <input class="field-input" type="number" id="f_importe" placeholder="0,00" min="0.01" step="0.01" required>
+      </div>
+    `));
+    body.appendChild(makeField('Descripción', `
+      <input class="field-input" type="text" id="f_descripcion" placeholder="Detalles adicionales (opcional)" autocomplete="off">
+    `));
+    body.appendChild(makeRCField());
+    body.appendChild(makePhotoField());
+  }
+}
+
+function makeField(labelText, inputHTML) {
+  const div = document.createElement('div');
+  div.className = 'field-group';
+  div.innerHTML = `<div class="field-label">${labelText}</div>${inputHTML}`;
+  return div;
+}
+
+function makePhotoField() {
+  const div = document.createElement('div');
+  div.className = 'field-group';
+  div.innerHTML = `
+    <div class="field-label">Foto del ticket <span style="color:rgba(244,243,242,0.3)">· opcional</span></div>
+    <div class="photo-field" id="photo-drop">
+      <input type="file" id="f_foto" accept="image/*" capture="environment" onchange="handlePhotoSelect(this)">
+      <img class="photo-preview" id="photo-preview" alt="preview">
+      <svg id="photo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <div class="photo-label" id="photo-label">Hacer foto o subir imagen</div>
+      <div class="photo-hint">JPG, PNG · máx. recomendado 10 MB</div>
+    </div>
+  `;
+  return div;
+}
+
+function makeRCField() {
+  const div = document.createElement('div');
+  div.className = 'field-group';
+  div.innerHTML = `
+    <div class="field-label">RC <span style="color:rgba(244,243,242,0.3)">· referencia del proyecto</span></div>
+    <div class="pill-group" style="margin-bottom:8px;">
+      <label>
+        <input type="radio" name="rc_tipo" value="codigo" checked onchange="toggleRCInput(this.value)">
+        <span class="pill-name">CÓDIGO</span>
+      </label>
+      <label>
+        <input type="radio" name="rc_tipo" value="visita" onchange="toggleRCInput(this.value)">
+        <span class="pill-name">VISITA TÉCNICA</span>
+      </label>
+    </div>
+    <div id="rc-codigo-wrap">
+      <input class="field-input" type="number" id="f_rc" placeholder="0000"
+             min="1000" max="9999" oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">
+    </div>
+    <div id="rc-visita-wrap" style="display:none;">
+      <input class="field-input" type="text" id="f_rc_espacio"
+             placeholder="Nombre del espacio / evento" autocomplete="off">
+    </div>
+  `;
+  return div;
+}
+
+function toggleRCInput(val) {
+  document.getElementById('rc-codigo-wrap').style.display = val === 'codigo' ? '' : 'none';
+  document.getElementById('rc-visita-wrap').style.display  = val === 'visita'  ? '' : 'none';
+}
+
+function getRCValue() {
+  const tipo = document.querySelector('input[name="rc_tipo"]:checked')?.value || 'codigo';
+  if (tipo === 'visita') {
+    const espacio = document.getElementById('f_rc_espacio')?.value.trim() || '';
+    return `Visita Técnica: ${espacio}`;
+  }
+  return document.getElementById('f_rc')?.value || '';
+}
+
+// ════════════════════════════════════════════════════════════
+//  CALCULO KILOMETRAJE
+// ════════════════════════════════════════════════════════════
+function calcTotal() {
+  const km = parseFloat(document.getElementById('f_km')?.value) || 0;
+  const tipo = document.querySelector('input[name="tipo_viaje"]:checked')?.value || 'normal';
+  const total = (km * TARIFAS[tipo]).toFixed(2);
+  const display = document.getElementById('total-display');
+  if (display) display.textContent = total.replace('.', ',') + ' €';
+}
+
+// ════════════════════════════════════════════════════════════
+//  FOTO
+// ════════════════════════════════════════════════════════════
+function handlePhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  state.fotoNombre = file.name;
+
+  const preview = document.getElementById('photo-preview');
+  const icon = document.getElementById('photo-icon');
+  const label = document.getElementById('photo-label');
+
+  const url = URL.createObjectURL(file);
+  preview.src = url;
+  preview.style.display = 'block';
+  if (icon) icon.style.display = 'none';
+  if (label) label.textContent = file.name;
+
+  compressImage(file).then(b64 => { state.fotoBase64 = b64; });
+}
+
+async function compressImage(file, maxSizePx = 1200) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxSizePx / img.width, maxSizePx / img.height, 1);
+      canvas.width  = Math.round(img.width  * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.75).split(',')[1]);
+    };
+    img.src = url;
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  VALIDACION
+// ════════════════════════════════════════════════════════════
+function validateField(id) {
+  const el = document.getElementById(id);
+  if (!el) return true;
+  const val = el.value.trim();
+  const ok = val !== '' && val !== '0';
+  if (!ok) {
+    el.classList.add('error', 'shake');
+    setTimeout(() => el.classList.remove('shake'), 400);
+  } else {
+    el.classList.remove('error');
+  }
+  return ok;
+}
+
+function validateForm(tipo) {
+  let valid = true;
+  const check = id => { if (!validateField(id)) valid = false; };
+
+  check('f_fecha');
+
+  if (tipo === 'kilometraje') {
+    check('f_origen');
+    check('f_destino');
+    const km = document.getElementById('f_km');
+    if (!km || parseFloat(km.value) <= 0) {
+      km?.classList.add('error', 'shake');
+      setTimeout(() => km?.classList.remove('shake'), 400);
+      valid = false;
+    }
+  }
+  if (tipo === 'comidas')     { check('f_importe'); check('f_descripcion'); }
+  if (tipo === 'alojamiento') { check('f_hotel');   check('f_importe'); }
+  if (tipo === 'otros')       { check('f_concepto'); check('f_importe'); }
+
+  return valid;
+}
+
+// ════════════════════════════════════════════════════════════
+//  SUBMIT
+// ════════════════════════════════════════════════════════════
+async function submitForm() {
+  const tipo = state.tipoGasto;
+  if (!validateForm(tipo)) {
+    showToast('Rellena los campos obligatorios', true);
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>ENVIANDO...';
+
+  const payload = buildPayload(tipo);
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    });
+
+    const summary = buildSummary(tipo, payload);
+    document.getElementById('success-summary').textContent = summary;
+    showScreen('success');
+  } catch (err) {
+    showToast('Error al enviar. Comprueba tu conexión.', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ENVIAR GASTO';
+  }
+}
+
+function buildPayload(tipo) {
+  const base = {
+    tipo,
+    timestamp: new Date().toISOString(),
+    empleado: state.empleado,
+    fecha: document.getElementById('f_fecha').value,
+  };
+
+  if (tipo === 'kilometraje') {
+    const km = parseFloat(document.getElementById('f_km').value);
+    const tipoViaje = document.querySelector('input[name="tipo_viaje"]:checked')?.value || 'normal';
+    const tarifa = TARIFAS[tipoViaje];
+    return {
+      ...base,
+      origen:     document.getElementById('f_origen').value.trim(),
+      destino:    document.getElementById('f_destino').value.trim(),
+      km,
+      tipo_viaje: tipoViaje,
+      tarifa,
+      total:      parseFloat((km * tarifa).toFixed(2)),
+      notas:      document.getElementById('f_notas')?.value.trim() || '',
+      rc:         getRCValue(),
+    };
+  }
+
+  const payload = {
+    ...base,
+    importe: parseFloat(document.getElementById('f_importe')?.value) || 0,
+    rc:      getRCValue(),
+  };
+
+  if (tipo === 'comidas') {
+    payload.categoria   = document.querySelector('input[name="tipo_comida"]:checked')?.value || 'Comida';
+    payload.descripcion = document.getElementById('f_descripcion')?.value.trim() || '';
+  } else if (tipo === 'alojamiento') {
+    payload.hotel       = document.getElementById('f_hotel')?.value.trim() || '';
+    payload.descripcion = document.getElementById('f_descripcion')?.value.trim() || '';
+  } else {
+    payload.concepto    = document.getElementById('f_concepto')?.value.trim() || '';
+    payload.descripcion = document.getElementById('f_descripcion')?.value.trim() || '';
+  }
+
+  if (state.fotoBase64) {
+    payload.foto_base64 = state.fotoBase64;
+    payload.foto_nombre = state.fotoNombre || 'ticket.jpg';
+  }
+
+  return payload;
+}
+
+function buildSummary(tipo, payload) {
+  if (tipo === 'kilometraje') {
+    return `Kilometraje · ${payload.km} km · ${payload.total.toFixed(2).replace('.', ',')} €`;
+  }
+  if (tipo === 'comidas')     return `${payload.categoria} · ${payload.importe.toFixed(2).replace('.', ',')} €`;
+  if (tipo === 'alojamiento') return `Alojamiento · ${payload.hotel} · ${payload.importe.toFixed(2).replace('.', ',')} €`;
+  return `${payload.concepto} · ${payload.importe.toFixed(2).replace('.', ',')} €`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.remove('hidden');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+function init() {
+  // Restore saved employee name (ignore old "Empleado X" placeholders)
+  const saved = localStorage.getItem('gastosEmpleado');
+  const isOldFormat = saved && /^Empleado\s+\d+$/i.test(saved.trim());
+  if (isOldFormat) localStorage.removeItem('gastosEmpleado');
+  if (saved && !isOldFormat && saved.length >= 2) {
+    state.empleado = saved;
+    document.getElementById('input-nombre').value = saved;
+    document.getElementById('btn-continue').disabled = false;
+    document.getElementById('menu-employee-pill').textContent = saved;
+    showScreen('menu');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
